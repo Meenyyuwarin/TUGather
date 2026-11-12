@@ -7,7 +7,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { campusColors as c } from "@/constants/campus-theme";
 
 const tabs = [
-  { name: "index", title: "Home", icon: "home" },
+  { name: "home", title: "Home", icon: "home" },
   { name: "explore", title: "Explore", icon: "compass" },
   { name: "tickets", title: "Tickets", icon: "ticket" },
   { name: "profile", title: "Profile", icon: "person" },

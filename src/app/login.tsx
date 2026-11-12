@@ -52,7 +52,7 @@ export default function LoginScreen() {
         if (error) throw error;
       }
       if (eventId) router.replace({ pathname: "/event/[id]", params: { id: eventId } });
-      else router.replace("/(tabs)");
+      else router.replace("/(tabs)/home");
     } catch (error) {
       setMessage(errorMessage(error));
     } finally {
@@ -109,7 +109,7 @@ export default function LoginScreen() {
             <Text style={styles.guest}>{creating ? "Already have an account? Sign in" : "New to TUGather? Create an account"}</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={() => router.replace("/(tabs)")}>
+          <TouchableOpacity onPress={() => router.replace("/(tabs)/home")}>
             <Text style={styles.guest}>Explore without signing in →</Text>
           </TouchableOpacity>
         </ScrollView>

@@ -46,7 +46,7 @@ export default function WelcomeScreen() {
                   <Text style={styles.primaryText}>เข้าสู่ระบบหรือสร้างบัญชี</Text>
                 </Pressable>
                 <Pressable accessibilityRole="button" style={({ pressed }) => [styles.secondary, pressed && styles.pressed]}
-                  onPress={() => router.replace("/(tabs)")}>
+                  onPress={() => router.replace("/(tabs)/home")}>
                   <Text style={styles.secondaryText}>ดูกิจกรรมโดยไม่เข้าสู่ระบบ</Text>
                   <Ionicons name="arrow-forward" size={17} color={c.red} />
                 </Pressable>
