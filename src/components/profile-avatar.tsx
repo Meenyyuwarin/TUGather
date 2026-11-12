@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from "react";
+import { LoadingTicket } from "@/components/action-feedback";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useFocusEffect } from "expo-router";
@@ -12,7 +13,7 @@ import { accountClient } from "@/services/student-account";
 const fileName = "avatar.jpg";
 const maxImageSide = 512;
 
-export function ProfileAvatar({ userId }: { userId: string }) {
+export function ProfileAvatar({ userId, name, editing = false }: { userId: string; name: string; editing?: boolean }) {
   const path = `${userId}/${fileName}`;
   const busy = useRef(false);
   const [photo, setPhoto] = useState<string>();
@@ -87,20 +88,23 @@ export function ProfileAvatar({ userId }: { userId: string }) {
   }
 
   return (
-    <View style={styles.card}>
+    <View style={styles.identity}>
       <View style={styles.row}>
         <View style={styles.avatar}>
           {photo ? (
             <Image source={{ uri: photo }} style={styles.image} accessibilityLabel="Your profile photo"
               onError={() => { setPhoto(undefined); setFailedAttempt(attempt); }} />
-          ) : <Ionicons name="person" size={30} color={c.red} />}
+          ) : pending || loading ? <LoadingTicket /> : <Ionicons name="person" size={30} color={c.red} />}
         </View>
         <View style={styles.details}>
-          <Text accessibilityRole="header" style={styles.title}>Profile photo</Text>
-          <Pressable accessibilityRole="button" accessibilityState={{ busy: pending || loading }}
-            disabled={pending || loading} onPress={choosePhoto} style={styles.button}>
-            <Text style={styles.buttonText}>{pending ? "Saving photo…" : loading ? "Loading photo…" : photo ? "Change photo" : "Add photo"}</Text>
-          </Pressable>
+          <Text accessibilityRole="header" style={styles.name}>{name}</Text>
+          {editing && (
+            <Pressable accessibilityRole="button" accessibilityState={{ busy: pending || loading }}
+              disabled={pending || loading} onPress={choosePhoto} style={styles.button}>
+              {photo && (pending || loading) && <LoadingTicket size={16} />}
+              <Text style={styles.buttonText}>{pending ? "Saving photo…" : loading ? "Loading photo…" : photo ? "Change photo" : "Add photo"}</Text>
+            </Pressable>
+          )}
         </View>
       </View>
       {loadFailed && (
@@ -114,13 +118,13 @@ export function ProfileAvatar({ userId }: { userId: string }) {
 }
 
 const styles = StyleSheet.create({
-  card: { backgroundColor: c.paper, borderRadius: 22, borderWidth: 1, borderColor: c.line, padding: 16, gap: 12 },
+  identity: { gap: 8 },
   row: { flexDirection: "row", gap: 16, alignItems: "center" },
-  avatar: { width: 68, height: 68, borderRadius: 34, overflow: "hidden", backgroundColor: c.rose, alignItems: "center", justifyContent: "center" },
+  avatar: { width: 68, height: 68, borderRadius: 34, borderWidth: 2, borderColor: c.gold, overflow: "hidden", backgroundColor: c.rose, alignItems: "center", justifyContent: "center" },
   image: { width: "100%", height: "100%" },
   details: { flex: 1, gap: 4 },
-  title: { color: c.ink, fontWeight: "900", fontSize: 17 },
-  button: { alignSelf: "flex-start", justifyContent: "center", minHeight: 44, paddingHorizontal: 14, borderRadius: 22, backgroundColor: c.rose },
+  name: { color: c.ink, fontWeight: "900", fontSize: 22 },
+  button: { alignSelf: "flex-start", flexDirection: "row", alignItems: "center", justifyContent: "center", minHeight: 44, paddingHorizontal: 14, borderRadius: 22, backgroundColor: c.rose },
   buttonText: { color: c.red, fontWeight: "800" },
   error: { color: c.red },
   success: { color: c.green },

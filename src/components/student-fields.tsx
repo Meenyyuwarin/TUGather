@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { LoadingFeedback } from "@/components/action-feedback";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { campusColors as c } from "@/constants/campus-theme";
 import { studentOptions, type StudentFields as Fields } from "@/services/student-account";
@@ -41,7 +42,7 @@ export function StudentFields({ value, onChange }: Props) {
         </View>
       ))}
       {error ? <Text accessibilityRole="button" style={styles.error} onPress={() => { setError(false); setAttempt((value) => value + 1); }}>Could not load student options. Try again.</Text> :
-        !options ? <Text accessibilityLiveRegion="polite" style={styles.status}>Loading student options…</Text> : null}
+        !options ? <LoadingFeedback label="Loading student options…" /> : null}
       {selects.map(({ field, label, options: choices }) => (
         <View key={field}>
           <Text style={styles.label}>{label}</Text>
@@ -67,6 +68,5 @@ const styles = StyleSheet.create({
   input: { minHeight: 48, justifyContent: "center", borderWidth: 1, borderColor: c.line, borderRadius: 14, paddingHorizontal: 14, backgroundColor: c.cream, color: c.ink, fontSize: 15 },
   choice: { minHeight: 44, justifyContent: "center", borderBottomWidth: 1, borderColor: c.line, paddingHorizontal: 14 },
   value: { color: c.ink, fontSize: 15 },
-  status: { color: c.muted },
   error: { color: c.red, fontWeight: "700" },
 });

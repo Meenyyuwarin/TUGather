@@ -6,7 +6,7 @@ import { campusColors as c } from "@/constants/campus-theme";
 import { router } from "expo-router";
 
 import { ProfileAvatar } from "@/components/profile-avatar";
-import { LoadingFeedback } from "@/components/action-feedback";
+import { LoadingFeedback, LoadingTicket } from "@/components/action-feedback";
 import { StudentFields } from "@/components/student-fields";
 import { useCheckInEvents } from "@/hooks/use-check-in-events";
 import { useStudentAccount } from "@/hooks/student-account";
@@ -49,6 +49,7 @@ function ProfileForm({ userId, initial, onSave, onCancel }: {
           <Text style={styles.secondaryText}>Cancel</Text>
         </TouchableOpacity>
         <TouchableOpacity accessibilityRole="button" style={[styles.button, styles.save]} disabled={pending} onPress={save}>
+          {pending && <LoadingTicket color={c.gold} size={16} />}
           <Text style={styles.buttonText}>{pending ? "Saving…" : "Save profile"}</Text>
         </TouchableOpacity>
       </View>
@@ -77,9 +78,9 @@ function StudentProfileCard({ userId, email, profile, reload }: {
 
   return (
     <View style={styles.card}>
+      <ProfileAvatar userId={userId} name={profile.display_name || email || "Student profile"} editing={editing} />
       {editing ? (
         <>
-          <Text accessibilityRole="header" style={styles.name}>{incomplete ? "Complete profile" : "Edit profile"}</Text>
           <ProfileForm userId={userId} initial={profile}
             onCancel={() => setEditing(false)}
             onSave={() => { reload(); setEditing(false); setSaved(true); }}
@@ -88,7 +89,6 @@ function StudentProfileCard({ userId, email, profile, reload }: {
       ) : (
         <>
           <View style={styles.cardHeader}>
-            <Text accessibilityRole="header" style={styles.name}>{profile.display_name || "Student profile"}</Text>
             <TouchableOpacity accessibilityRole="button" style={styles.edit}
               onPress={() => { setSaved(false); setEditing(true); }}>
               <Ionicons name="pencil-outline" size={16} color={c.red} />
@@ -123,8 +123,12 @@ export default function ProfileScreen() {
     <SafeAreaView style={styles.container} edges={["top", "right", "left"]}>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View style={styles.hero}>
-          <View style={styles.icon}><Ionicons name="person" size={25} color={c.red} /></View>
-          <Text accessibilityRole="header" style={styles.title}>Your Profile</Text>
+          <View style={styles.icon} aria-hidden>
+            <Ionicons name="person" size={25} color={c.red} />
+            <Ionicons name="heart" size={15} color={c.red} style={styles.heart} />
+          </View>
+          <Text accessibilityRole="header" style={styles.title}>My profile</Text>
+          <Ionicons name="sparkles" size={22} color={c.red} style={styles.sparkles} aria-hidden />
         </View>
         {profileStatus === "loading" && <LoadingFeedback label="Loading account…" />}
         {profileStatus !== "loading" && !session && (
@@ -134,10 +138,10 @@ export default function ProfileScreen() {
         )}
         {session && (
           <>
-            <ProfileAvatar key={session.user.id} userId={session.user.id} />
             {profileStatus === "error" && <Text accessibilityRole="button" onPress={reloadProfile}>Could not load profile. Try again.</Text>}
             {profileStatus === "ready" && !profile && (
               <View style={styles.card}>
+                <ProfileAvatar key={session.user.id} userId={session.user.id} name={session.user.email ?? "My account"} />
                 <Text accessibilityRole="header" style={styles.name}>No profile found</Text>
                 <Text accessibilityLiveRegion="polite">We could not find a student profile for this account.</Text>
                 <TouchableOpacity accessibilityRole="button" style={styles.button} onPress={reloadProfile}>
@@ -165,13 +169,15 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: c.cream },
   content: { width: "100%", maxWidth: 640, alignSelf: "center", padding: 20, gap: 16 },
-  title: { fontSize: 30, fontWeight: "900", color: c.ink, flexShrink: 1 },
-  hero: { flexDirection: "row", alignItems: "center", gap: 12, padding: 16, borderRadius: 26, backgroundColor: c.gold },
-  icon: { width: 46, height: 46, borderRadius: 23, alignItems: "center", justifyContent: "center", backgroundColor: c.paper },
+  title: { fontSize: 30, fontWeight: "900", letterSpacing: -0.6, color: c.ink, flex: 1 },
+  hero: { flexDirection: "row", alignItems: "center", gap: 14, padding: 18, borderRadius: 28, backgroundColor: c.gold },
+  icon: { width: 54, height: 54, borderRadius: 18, alignItems: "center", justifyContent: "center", backgroundColor: c.paper, transform: [{ rotate: "-8deg" }] },
+  heart: { position: "absolute", right: 5, top: 5 },
+  sparkles: { transform: [{ rotate: "10deg" }], marginRight: 3 },
   button: { backgroundColor: c.red, padding: 16, borderRadius: 24 },
   buttonText: { color: "#FFF", fontWeight: "800", textAlign: "center" },
   card: { padding: 18, gap: 12, borderRadius: 24, backgroundColor: c.paper, borderWidth: 1, borderColor: c.line },
-  cardHeader: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 8 },
+  cardHeader: { alignItems: "flex-start" },
   name: { color: c.ink, fontSize: 22, fontWeight: "900", flexShrink: 1 },
   edit: { flexDirection: "row", alignItems: "center", gap: 6, borderRadius: 22, paddingHorizontal: 13, minHeight: 44, backgroundColor: c.rose },
   row: { gap: 4, paddingTop: 10, borderTopWidth: 1, borderColor: c.line },
@@ -180,7 +186,7 @@ const styles = StyleSheet.create({
   actions: { flexDirection: "row", gap: 10 },
   secondary: { flex: 1, borderRadius: 24, backgroundColor: c.rose, justifyContent: "center", alignItems: "center", padding: 16 },
   secondaryText: { color: c.red, fontWeight: "800" },
-  save: { flex: 1 },
+  save: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6 },
   success: { color: c.green, fontWeight: "700" },
   link: { color: c.red, fontWeight: "700", paddingVertical: 12 },
 });

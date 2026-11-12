@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from "react";
+import { LoadingFeedback } from "@/components/action-feedback";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { router, useFocusEffect } from "expo-router";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
@@ -47,7 +48,7 @@ function Scanner({ eventId, close }: { eventId: string; close: () => void }) {
 
   return (
     <View style={styles.group}>
-      {!permission ? <Text>Checking camera permission…</Text> :
+      {!permission ? <LoadingFeedback label="Checking camera permission…" /> :
         !permission.granted ? (
           <>
             <Text>Camera access is required to scan a ticket.</Text>
@@ -64,7 +65,7 @@ function Scanner({ eventId, close }: { eventId: string; close: () => void }) {
             onMountError={() => setResult({ success: false, message: "Could not open the camera." })}
           />
         )}
-      {pending && <Text accessibilityLiveRegion="polite">Checking ticket…</Text>}
+      {pending && <LoadingFeedback label="Checking ticket…" />}
       {result && (
         <>
           <Text accessibilityLiveRegion="polite" style={result.success ? styles.success : styles.error}>{result.message}</Text>
@@ -89,7 +90,7 @@ export default function CheckInScreen() {
       <ScrollView contentContainerStyle={styles.content}>
         <Text accessibilityRole="button" style={styles.link} onPress={() => router.canGoBack() ? router.back() : router.replace("/(tabs)/profile")}>← Back</Text>
         <Text style={styles.title}>Event check-in</Text>
-        {loading ? <Text>Loading events…</Text> :
+        {loading ? <LoadingFeedback label="Loading events…" /> :
           !session ? <Text accessibilityRole="button" style={styles.link} onPress={() => router.push("/login")}>Sign in to check in tickets</Text> :
           error ? <Text accessibilityRole="button" style={styles.link} onPress={retry}>Could not load check-in events. Try again.</Text> :
           event ? (

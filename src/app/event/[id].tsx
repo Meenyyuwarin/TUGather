@@ -1,4 +1,4 @@
-import { useState, type ComponentProps } from "react";
+import { useState, type ComponentProps, type ReactNode } from "react";
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useLocalSearchParams } from "expo-router";
@@ -6,13 +6,14 @@ import { LinearGradient } from "expo-linear-gradient";
 import Ionicons from "@expo/vector-icons/Ionicons";
 
 import { EventRegistration } from "@/components/event-registration";
+import { LoadingTicket } from "@/components/action-feedback";
 import { EventCatalogStatus } from "@/components/event-catalog-status";
 import { campusColors as c } from "@/constants/campus-theme";
 import { useAvailableSeats, useEventCatalog } from "@/hooks/use-event-catalog";
 
 function EventFact({ label, value, icon }: {
   label: string;
-  value: string;
+  value: ReactNode;
   icon: ComponentProps<typeof Ionicons>["name"];
 }) {
   return (
@@ -20,7 +21,7 @@ function EventFact({ label, value, icon }: {
       <View style={styles.factIcon}><Ionicons name={icon} size={18} color={c.red} /></View>
       <View style={styles.factText}>
         <Text style={styles.label}>{label}</Text>
-        <Text style={styles.value}>{value}</Text>
+        {typeof value === "string" ? <Text style={styles.value}>{value}</Text> : value}
       </View>
     </View>
   );
@@ -85,7 +86,10 @@ function EventDetail({ id }: { id: string }) {
               <EventFact icon="location-outline" label="Location" value={event.location} />
               <EventFact icon="ticket-outline" label="Available seats" value={
                 event.capacity === null ? "No seat limit" : seats?.error ? "Unavailable" :
-                  seats?.value == null ? "Checking…" : `${seats.value} / ${event.capacity}`
+                  seats === undefined ? <View style={styles.seatLoading} accessibilityLiveRegion="polite" aria-busy>
+                    <LoadingTicket size={16} />
+                    <Text style={styles.value}>Checking…</Text>
+                  </View> : seats.value === null ? "Unavailable" : `${seats.value} / ${event.capacity}`
               } />
             </View>
 
@@ -125,6 +129,7 @@ const styles = StyleSheet.create({
   facts: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   fact: { flexGrow: 1, flexShrink: 1, flexBasis: "45%", minWidth: 0, flexDirection: "row", alignItems: "center", gap: 8, padding: 11, borderRadius: 16, backgroundColor: c.paper, borderColor: c.line, borderWidth: 1 },
   factIcon: { width: 32, height: 32, borderRadius: 16, backgroundColor: c.rose, alignItems: "center", justifyContent: "center" },
+  seatLoading: { flexDirection: "row", alignItems: "center", flexWrap: "wrap" },
   factText: { flex: 1, gap: 3 },
   label: { color: c.muted, fontSize: 11, fontWeight: "700" },
   value: { color: c.ink, fontSize: 14, fontWeight: "800" },
