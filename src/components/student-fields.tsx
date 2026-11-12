@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { campusColors as c } from "@/constants/campus-theme";
 import { studentOptions, type StudentFields as Fields } from "@/services/student-account";
 
 type Props = { value: Fields; onChange: (value: Fields) => void };
@@ -39,19 +40,19 @@ export function StudentFields({ value, onChange }: Props) {
             onChangeText={(text) => onChange({ ...value, [field]: text })} />
         </View>
       ))}
-      {error ? <Text accessibilityRole="button" onPress={() => { setError(false); setAttempt((value) => value + 1); }}>Could not load student options. Try again.</Text> :
-        !options ? <Text>Loading student options…</Text> : null}
+      {error ? <Text accessibilityRole="button" style={styles.error} onPress={() => { setError(false); setAttempt((value) => value + 1); }}>Could not load student options. Try again.</Text> :
+        !options ? <Text accessibilityLiveRegion="polite" style={styles.status}>Loading student options…</Text> : null}
       {selects.map(({ field, label, options: choices }) => (
         <View key={field}>
           <Text style={styles.label}>{label}</Text>
           <Pressable accessibilityRole="button" accessibilityLabel={label} accessibilityState={{ expanded: open === field }}
             style={styles.input} disabled={!choices.length} onPress={() => setOpen(open === field ? null : field)}>
-            <Text>{choices.find((option) => option.id === value[field])?.name ?? "Choose"}</Text>
+            <Text style={styles.value}>{choices.find((option) => option.id === value[field])?.name ?? "Choose"}</Text>
           </Pressable>
           {open === field && choices.map((option) => (
             <Pressable accessibilityRole="button" key={option.id} style={styles.choice}
               onPress={() => { onChange({ ...value, [field]: option.id }); setOpen(null); }}>
-              <Text>{option.name}</Text>
+              <Text style={styles.value}>{option.name}</Text>
             </Pressable>
           ))}
         </View>
@@ -61,8 +62,11 @@ export function StudentFields({ value, onChange }: Props) {
 }
 
 const styles = StyleSheet.create({
-  fields: { gap: 12, marginVertical: 16 },
-  label: { fontWeight: "700", color: "#171717", marginBottom: 6 },
-  input: { minHeight: 44, justifyContent: "center", borderWidth: 1, borderColor: "#BBB5AB", borderRadius: 5, padding: 10, color: "#171717" },
-  choice: { minHeight: 44, justifyContent: "center", borderBottomWidth: 1, borderColor: "#E4DED5", paddingHorizontal: 10 },
+  fields: { gap: 14 },
+  label: { fontSize: 13, fontWeight: "800", color: c.ink, marginBottom: 6 },
+  input: { minHeight: 48, justifyContent: "center", borderWidth: 1, borderColor: c.line, borderRadius: 14, paddingHorizontal: 14, backgroundColor: c.cream, color: c.ink, fontSize: 15 },
+  choice: { minHeight: 44, justifyContent: "center", borderBottomWidth: 1, borderColor: c.line, paddingHorizontal: 14 },
+  value: { color: c.ink, fontSize: 15 },
+  status: { color: c.muted },
+  error: { color: c.red, fontWeight: "700" },
 });

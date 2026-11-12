@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
@@ -5,11 +6,18 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 
 import { EventCatalogStatus } from "@/components/event-catalog-status";
 import { campusColors as c } from "@/constants/campus-theme";
+import { useStudentAccount } from "@/hooks/student-account";
 import { useEventCatalog } from "@/hooks/use-event-catalog";
 
 export default function HomeScreen() {
   const { events, status, retry } = useEventCatalog();
-  const [featured, ...more] = events.slice(0, 3);
+  const { session, profile } = useStudentAccount();
+  const [allCampusesFor, setAllCampusesFor] = useState<string>();
+  const userId = session?.user.id;
+  const mainCampus = profile?.campus?.name;
+  const campus = userId && allCampusesFor !== userId ? mainCampus : undefined;
+  const visibleEvents = campus ? events.filter((event) => event.campus === campus) : events;
+  const [featured, ...more] = visibleEvents.slice(0, 3);
 
   function openEvent(id: string) {
     router.push({ pathname: "/event/[id]", params: { id } });
@@ -47,6 +55,15 @@ export default function HomeScreen() {
         </View>
 
         <Text accessibilityRole="header" style={styles.section}>Featured event</Text>
+        {userId && mainCampus && (
+          <View style={styles.campusRow}>
+            <Text style={styles.subtitle}>{campus ?? "All campuses"}</Text>
+            <Pressable accessibilityRole="button" style={styles.campusToggle}
+              onPress={() => setAllCampusesFor(campus ? userId : undefined)}>
+              <Text style={styles.link}>{campus ? "Show all campuses" : "Use main campus"}</Text>
+            </Pressable>
+          </View>
+        )}
         {status === "ready" && featured ? (
           <Pressable accessibilityRole="button" style={styles.featured} onPress={() => openEvent(featured.id)}>
             {featured.image && <Image source={{ uri: featured.image }} style={styles.featuredImage} />}
@@ -56,7 +73,7 @@ export default function HomeScreen() {
               <Text style={styles.meta}>{featured.date} · {featured.campus}</Text>
             </View>
           </Pressable>
-        ) : <EventCatalogStatus status={status} retry={retry} emptyText="No upcoming events with open seats." />}
+        ) : <EventCatalogStatus status={status} retry={retry} emptyText={campus ? `No upcoming events with open seats in ${campus}.` : "No upcoming events with open seats."} />}
 
         {status === "ready" && more.length > 0 && (
           <>
@@ -102,6 +119,8 @@ const styles = StyleSheet.create({
   shortcuts: { flexDirection: "row", gap: 12 },
   shortcut: { flex: 1, minHeight: 50, borderRadius: 26, backgroundColor: c.rose, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 },
   shortcutText: { color: c.red, fontWeight: "800" },
+  campusRow: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", columnGap: 12 },
+  campusToggle: { minHeight: 44, justifyContent: "center" },
   sectionRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   section: { fontSize: 22, fontWeight: "900", color: c.ink },
   link: { color: c.red, paddingVertical: 8, fontWeight: "800" },

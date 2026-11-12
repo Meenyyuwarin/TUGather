@@ -4,12 +4,15 @@ import { Link, router } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { LinearGradient } from "expo-linear-gradient";
 
+import { LoadingFeedback } from "@/components/action-feedback";
+import { useEventCatalog } from "@/hooks/use-event-catalog";
 import { campusColors as c } from "@/constants/campus-theme";
 
 const photoSource = "https://commons.wikimedia.org/wiki/File:Dome_Building_TU.jpg";
 const photoLicense = "https://creativecommons.org/licenses/by/4.0/";
 
 export default function WelcomeScreen() {
+  const { events, status, retry } = useEventCatalog();
   const { width } = useWindowDimensions();
   const wide = width >= 760;
 
@@ -39,6 +42,21 @@ export default function WelcomeScreen() {
               </View>
               <Text accessibilityRole="header" style={[styles.title, wide && styles.titleWide]}>เจอกันที่{"\n"}<Text style={styles.red}>ธรรมศาสตร์</Text></Text>
               <Text style={styles.subtitle}>ค้นหาและสมัครกิจกรรมมหาวิทยาลัยในที่เดียว</Text>
+              <View style={styles.availability}>
+                {status === "loading" ? <LoadingFeedback label="กำลังโหลดกิจกรรม…" /> :
+                  status === "error" ? (
+                    <>
+                      <Text accessibilityLiveRegion="polite" style={styles.subtitle}>โหลดกิจกรรมไม่สำเร็จ</Text>
+                      <Pressable accessibilityRole="button" onPress={retry} style={styles.retry}>
+                        <Text style={styles.secondaryText}>ลองใหม่</Text>
+                      </Pressable>
+                    </>
+                  ) : (
+                    <Text accessibilityLiveRegion="polite" style={styles.subtitle}>
+                      {events.length ? `มีกิจกรรมที่เปิดรับสมัคร ${events.length} รายการ` : "ขณะนี้ยังไม่มีกิจกรรมที่เปิดรับสมัคร"}
+                    </Text>
+                  )}
+              </View>
               <View style={styles.actions}>
                 <Pressable accessibilityRole="button" style={({ pressed }) => [styles.primary, pressed && styles.pressed]}
                   onPress={() => router.push("/login")}>
@@ -87,6 +105,8 @@ const styles = StyleSheet.create({
   title: { fontSize: 36, lineHeight: 47, fontWeight: "900", color: c.ink },
   titleWide: { fontSize: 45, lineHeight: 60 },
   subtitle: { fontSize: 14, color: c.muted, lineHeight: 21 },
+  availability: { gap: 4 },
+  retry: { minHeight: 44, justifyContent: "center", alignSelf: "flex-start" },
   actions: { gap: 7, marginTop: 4 },
   primary: { minHeight: 49, borderRadius: 25, backgroundColor: c.red, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingHorizontal: 11 },
   primaryText: { color: c.paper, fontSize: 14, fontWeight: "800", flexShrink: 1 },

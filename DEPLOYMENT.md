@@ -17,6 +17,13 @@ There are no Expo API/server routes. `vercel.json` exports the web app to
   These variables are embedded in the browser bundle at build time, so redeploy
   after changing them. `.env.local` is ignored by Git and is not sent to Vercel.
 
+## Profile photos
+
+Apply `supabase/migrations/20261112000600_profile_avatars.sql` after the earlier
+migrations in each environment that will use profile photos. It creates a private
+Storage bucket. A signed-in user can read and replace only their own photo.
+Apply and verify this migration in Preview before enabling the feature in Production.
+
 ## Validate and push
 
 ```sh

@@ -35,6 +35,13 @@
       ],
       "expo-sqlite",
       [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow TUGather to select a profile photo.",
+          "microphonePermission": false
+        }
+      ],
+      [
         "expo-camera",
         {
           "cameraPermission": "Allow TUGather to scan event ticket QR codes.",

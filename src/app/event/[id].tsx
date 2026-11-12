@@ -26,9 +26,31 @@ function EventFact({ label, value, icon }: {
   );
 }
 
+const eventIdPattern = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
+
 export default function EventDetailScreen() {
-  const [openedAt] = useState(Date.now);
   const { id } = useLocalSearchParams<{ id: string }>();
+
+  if (typeof id === "string" && eventIdPattern.test(id)) {
+    return <EventDetail id={id.toLowerCase()} />;
+  }
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <View style={styles.content}>
+        <Text accessibilityRole="header" style={styles.invalidTitle}>Invalid event link</Text>
+        <Text>This link does not contain a valid event ID.</Text>
+        <Pressable accessibilityRole="button" style={styles.back}
+          onPress={() => router.replace("/(tabs)/explore")}>
+          <Text style={styles.backText}>Browse events</Text>
+        </Pressable>
+      </View>
+    </SafeAreaView>
+  );
+}
+
+function EventDetail({ id }: { id: string }) {
+  const [openedAt] = useState(Date.now);
   const { events, status, retry } = useEventCatalog(id);
   const event = events.find((item) => item.id === id);
   const seats = useAvailableSeats(event?.capacity == null ? undefined : event.id);
@@ -92,6 +114,7 @@ export default function EventDetailScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: c.cream },
   content: { width: "100%", maxWidth: 760, alignSelf: "center", padding: 18, paddingBottom: 28, gap: 13 },
+  invalidTitle: { fontSize: 28, fontWeight: "900", color: c.ink },
   back: { minHeight: 42, alignSelf: "flex-start", flexDirection: "row", alignItems: "center", gap: 7, backgroundColor: c.rose, borderRadius: 22, paddingHorizontal: 14 },
   backText: { color: c.red, fontWeight: "800" },
   hero: { minHeight: 226, padding: 18, gap: 68, justifyContent: "space-between", overflow: "hidden", borderRadius: 26, backgroundColor: c.ink },

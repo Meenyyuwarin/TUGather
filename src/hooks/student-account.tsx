@@ -17,7 +17,7 @@ export function StudentAccountProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(Boolean(supabase));
   const [revision, setRevision] = useState(0);
-  const [result, setResult] = useState<{ id: string; profile: StudentProfile | null; error?: true }>();
+  const [result, setResult] = useState<{ id: string; revision: number; profile: StudentProfile | null; error?: true }>();
   const userId = session?.user.id;
 
   useEffect(() => {
@@ -49,7 +49,7 @@ export function StudentAccountProvider({ children }: { children: ReactNode }) {
       .then(({ data, error }) => {
         if (controller.signal.aborted) return;
         setResult({
-          id: userId, profile: data ? { ...data, display_name: data.display_name ?? "", student_id: data.student_id ?? "", major: data.major ?? "" } : null,
+          id: userId, revision, profile: data ? { ...data, display_name: data.display_name ?? "", student_id: data.student_id ?? "", major: data.major ?? "" } : null,
           ...(error ? { error: true as const } : {}),
         });
       });
@@ -60,7 +60,8 @@ export function StudentAccountProvider({ children }: { children: ReactNode }) {
   return (
     <AccountContext.Provider value={{
       session, loading, profile: current?.profile ?? null,
-      profileStatus: loading || (userId && !current) ? "loading" : current?.error ? "error" : "ready",
+      profileStatus: loading || (userId && current?.revision !== revision && !current?.profile)
+        ? "loading" : current?.error ? "error" : "ready",
       reloadProfile: () => setRevision((value) => value + 1),
     }}>
       {children}

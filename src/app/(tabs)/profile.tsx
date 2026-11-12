@@ -5,11 +5,12 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { campusColors as c } from "@/constants/campus-theme";
 import { router } from "expo-router";
 
+import { ProfileAvatar } from "@/components/profile-avatar";
 import { LoadingFeedback } from "@/components/action-feedback";
 import { StudentFields } from "@/components/student-fields";
 import { useCheckInEvents } from "@/hooks/use-check-in-events";
 import { useStudentAccount } from "@/hooks/student-account";
-import { accountClient, cleanStudentFields, emptyStudent, errorMessage, studentFieldsComplete, type StudentFields as Fields, type StudentProfile } from "@/services/student-account";
+import { accountClient, cleanStudentFields, errorMessage, studentFieldsComplete, type StudentFields as Fields, type StudentProfile } from "@/services/student-account";
 
 function ProfileForm({ userId, initial, onSave, onCancel }: {
   userId: string;
@@ -27,6 +28,7 @@ function ProfileForm({ userId, initial, onSave, onCancel }: {
       return;
     }
     setPending(true);
+    setMessage("");
     try {
       const { error } = await accountClient().from("profiles")
         .update(cleanStudentFields(student)).eq("id", userId).select("id").single();
@@ -58,26 +60,27 @@ function ProfileForm({ userId, initial, onSave, onCancel }: {
 function StudentProfileCard({ userId, email, profile, reload }: {
   userId: string;
   email?: string;
-  profile: StudentProfile | null;
+  profile: StudentProfile;
   reload: () => void;
 }) {
   const [editing, setEditing] = useState(false);
   const [saved, setSaved] = useState(false);
+  const incomplete = !studentFieldsComplete(profile);
   const fields = [
-    ["Email", email ?? profile?.email],
-    ["Student ID", profile?.student_id],
-    ["Main campus", profile?.campus?.name],
-    ["Faculty", profile?.faculty?.name],
-    ["Year of study", profile?.year_of_study],
-    ["Major", profile?.major],
+    ["Email", email ?? profile.email],
+    ["Student ID", profile.student_id],
+    ["Main campus", profile.campus?.name],
+    ["Faculty", profile.faculty?.name],
+    ["Year of study", profile.year_of_study],
+    ["Major", profile.major],
   ] as const;
 
   return (
     <View style={styles.card}>
       {editing ? (
         <>
-          <Text accessibilityRole="header" style={styles.name}>Edit profile</Text>
-          <ProfileForm userId={userId} initial={profile ?? emptyStudent}
+          <Text accessibilityRole="header" style={styles.name}>{incomplete ? "Complete profile" : "Edit profile"}</Text>
+          <ProfileForm userId={userId} initial={profile}
             onCancel={() => setEditing(false)}
             onSave={() => { reload(); setEditing(false); setSaved(true); }}
           />
@@ -85,13 +88,14 @@ function StudentProfileCard({ userId, email, profile, reload }: {
       ) : (
         <>
           <View style={styles.cardHeader}>
-            <Text accessibilityRole="header" style={styles.name}>{profile?.display_name || "Student profile"}</Text>
+            <Text accessibilityRole="header" style={styles.name}>{profile.display_name || "Student profile"}</Text>
             <TouchableOpacity accessibilityRole="button" style={styles.edit}
               onPress={() => { setSaved(false); setEditing(true); }}>
               <Ionicons name="pencil-outline" size={16} color={c.red} />
-              <Text style={styles.secondaryText}>Edit profile</Text>
+              <Text style={styles.secondaryText}>{incomplete ? "Complete profile" : "Edit profile"}</Text>
             </TouchableOpacity>
           </View>
+          {incomplete && <Text>Complete your student details to finish setting up your profile.</Text>}
           {fields.map(([label, value]) => (
             <View key={label} style={styles.row}>
               <Text style={styles.label}>{label}</Text>
@@ -130,8 +134,18 @@ export default function ProfileScreen() {
         )}
         {session && (
           <>
+            <ProfileAvatar key={session.user.id} userId={session.user.id} />
             {profileStatus === "error" && <Text accessibilityRole="button" onPress={reloadProfile}>Could not load profile. Try again.</Text>}
-            {profileStatus === "ready" && (
+            {profileStatus === "ready" && !profile && (
+              <View style={styles.card}>
+                <Text accessibilityRole="header" style={styles.name}>No profile found</Text>
+                <Text accessibilityLiveRegion="polite">We could not find a student profile for this account.</Text>
+                <TouchableOpacity accessibilityRole="button" style={styles.button} onPress={reloadProfile}>
+                  <Text style={styles.buttonText}>Check again</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+            {profileStatus === "ready" && profile && (
               <StudentProfileCard key={session.user.id} userId={session.user.id} email={session.user.email} profile={profile} reload={reloadProfile} />
             )}
             {checkInEvents.length > 0 && (

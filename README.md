@@ -1,56 +1,70 @@
-# Welcome to your Expo app 👋
+# TUGather
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+TUGather ช่วยให้นักศึกษาธรรมศาสตร์ค้นหากิจกรรมตามศูนย์และความสนใจ สมัครด้วยข้อมูลนักศึกษา และเปิดตั๋ว QR สำหรับเช็กอิน
 
-## Get started
+[เปิด TUGather บนเว็บ](https://tugather-zeta.vercel.app)
 
-1. Install dependencies
+## เริ่มใช้งาน
 
-   ```bash
-   npm install
-   ```
+1. ติดตั้ง dependencies ด้วย `npm ci`
+2. คัดลอก `.env.example` เป็น `.env.local` แล้วใส่ Supabase URL และ publishable key ของสภาพแวดล้อมที่ต้องการใช้
+3. สำหรับฐานทดสอบใหม่ ให้รัน migrations ใน [supabase/migrations](supabase/migrations) ตามลำดับ แล้วเตรียมข้อมูลทดสอบอย่างน้อย 3 กิจกรรมใน 2 หมวดหมู่ พร้อมบัญชีนักศึกษาและบัญชีสตาฟประจำกิจกรรม
+4. เปิดเว็บด้วย `npm run web` หรือเปิด Android emulator แล้วใช้ `npm run android` ดูวิธี deploy ที่ [DEPLOYMENT.md](DEPLOYMENT.md)
 
-2. Start the app
+## เส้นทางใช้งาน
 
-   ```bash
-   npx expo start
-   ```
+| หน้า | สิ่งที่ทำได้ |
+| --- | --- |
+| `/` และ `/login` | ดูจำนวนกิจกรรมที่เปิดรับ เข้าสู่ระบบ สร้างบัญชี หรือไปต่อในฐานะผู้เยี่ยมชม |
+| `/home` และ `/explore` | ดูกิจกรรม กรองตามศูนย์หลักหรือทุกศูนย์ ค้นชื่อกิจกรรมและชมรม และกรองหมวดหมู่กับวันที่ใน Explore |
+| `/event/[id]` | ดูเวลา สถานที่ ที่นั่ง และเงื่อนไข ตรวจข้อมูลนักศึกษาแล้วส่งใบสมัคร |
+| `/tickets` | เปิดตั๋ว QR ดูสถานะการเข้าร่วม หรือยกเลิกเมื่อกิจกรรมยังอนุญาต |
+| `/profile` | ดูและแก้ไขข้อมูลนักศึกษา เพิ่มหรือเปลี่ยนรูปโปรไฟล์ สตาฟที่มีสิทธิ์เข้าหน้าเช็กอินได้จากหน้านี้ |
+| `/check-in` | เลือกกิจกรรมที่มีสิทธิ์และสแกน QR ของผู้เข้าร่วม |
 
-In the output, you'll find options to open the app in a
+## สถาปัตยกรรมและสิทธิ์
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+Expo Router ใช้หน้าจอร่วมกันระหว่างเว็บและ Android เว็บ build เป็น SPA บน Vercel ส่วน Supabase ให้บริการ Auth, PostgreSQL, Storage สำหรับรูปโปรไฟล์ และ Realtime สำหรับอัปเดตตั๋ว โค้ดฝั่งผู้ใช้ใช้ publishable key ฐานข้อมูลตรวจสิทธิ์ด้วย Row Level Security (RLS) และตรวจเงื่อนไขการสมัคร ยกเลิก และเช็กอินในฟังก์ชัน RPC
 
-You can start developing by editing the files inside the **src/app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+| ผู้ใช้ | สิทธิ์ในขั้นตอนหลัก |
+| --- | --- |
+| ผู้เยี่ยมชม | อ่านข้อมูลกิจกรรมที่เผยแพร่และข้อมูลอ้างอิงที่เปิดให้สาธารณะ |
+| นักศึกษาที่เข้าสู่ระบบ | อ่านและแก้โปรไฟล์ของตน อ่านและเปลี่ยนรูปของตนใน bucket ส่วนตัว อ่านใบสมัครและตั๋วของตน และเรียก RPC สำหรับสมัครหรือยกเลิก |
+| ผู้จัดหรือสตาฟที่ได้รับสิทธิ์ | ดูกิจกรรมที่ตนมีสิทธิ์เช็กอินและเรียก RPC เช็กอินสำหรับกิจกรรมนั้น |
 
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+```mermaid
+erDiagram
+    CAMPUSES o|--o{ PROFILES : "main campus"
+    FACULTIES o|--o{ PROFILES : faculty
+    CAMPUSES o|--o{ EVENTS : venue
+    CLUBS o|--o{ EVENTS : organizer
+    CLUBS ||--o{ CLUB_MEMBERS : has
+    PROFILES ||--o{ CLUB_MEMBERS : joins
+    EVENT_CATEGORIES o|--o{ EVENTS : category
+    EVENTS ||--o{ EVENT_ELIGIBILITY_RULES : defines
+    EVENTS ||--o{ REGISTRATION_QUESTIONS : asks
+    EVENTS ||--o{ REGISTRATIONS : receives
+    PROFILES ||--o{ REGISTRATIONS : submits
+    REGISTRATIONS ||--o{ REGISTRATION_ANSWERS : contains
+    REGISTRATION_QUESTIONS ||--o{ REGISTRATION_ANSWERS : answers
+    REGISTRATIONS ||--o| TICKETS : issues
 ```
 
-This command will move the starter code to the **example** directory and create a blank **src/app** directory where you can start developing.
+## ตรวจงาน DX212
 
-### Other setup steps
+| กรณีทดสอบ | สิ่งที่ควรเห็น |
+| --- | --- |
+| เปิดทั้ง 8 routes และรีเฟรช URL โดยตรง | เข้าถึงหน้าที่ถูกต้อง รวมถึงหน้าเช็กอินและหน้ารายละเอียดกิจกรรม |
+| หน่วง API, คืนรายการว่าง, คืน HTTP 500 และคืนข้อมูลปกติในฐานแยกหรือ mock | Loading, Empty, Error และ Success แยกกันชัดเจน ลองใหม่ได้เมื่อการโหลดล้มเหลว |
+| เข้าด้วยบัญชีที่มีศูนย์หลัก แล้วเปลี่ยนตัวกรอง | Home และ Explore เริ่มจากศูนย์หลัก ค้นและกรองร่วมกันได้ และสลับเป็นทุกศูนย์ได้ |
+| สมัครในฐานทดสอบแล้วลองส่งซ้ำ | ได้ตั๋วหนึ่งใบ จำนวนที่นั่งลดลงครั้งเดียว |
+| เปิดตั๋วแล้วเช็กอินด้วยบัญชีสตาฟ | QR ที่ถูกต้องเช็กอินได้ ตั๋วแสดงสถานะอัปเดต สแกนซ้ำหรือใช้บัญชีที่ไม่มีสิทธิ์แล้วถูกปฏิเสธ |
+| รันบน Android และเว็บ | เก็บภาพหรือวิดีโอของขั้นตอนค้นหา สมัคร เปิด QR และเช็กอินด้วยข้อมูลทดสอบ |
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+`scripts/test-registration.sql` และ `scripts/test-cancellation.sql` เป็นกรณีทดสอบ SQL สำหรับฐานทดสอบที่รัน migrations แล้ว
 
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+```sh
+npm run lint
+npx tsc --noEmit
+npx expo export --platform web
+```

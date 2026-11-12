@@ -171,9 +171,11 @@ export default function ExploreScreen() {
             Events
           </Text>
 
-          <Text style={styles.resultsCount}>
-            {filteredEvents.length} EVENTS
-          </Text>
+          {status === "ready" && (
+            <Text accessibilityLiveRegion="polite" style={styles.resultsCount}>
+              {filteredEvents.length} EVENTS
+            </Text>
+          )}
         </View>
 
         {/* EVENT LIST */}
@@ -189,7 +191,7 @@ export default function ExploreScreen() {
               Try another search or change your filters.
             </Text>
 
-            <TouchableOpacity onPress={resetFilters}>
+            <TouchableOpacity accessibilityRole="button" onPress={resetFilters}>
               <Text style={styles.resetText}>
                 RESET FILTERS →
               </Text>
